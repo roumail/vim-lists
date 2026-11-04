@@ -16,11 +16,15 @@ open goes to its window. The window is as tall as the list, up to
 
 | Key | What it does |
 | --- | --- |
+| `dd` | Remove the item under the cursor, in the lists that can (their heading says `dd remove`). What removing means is the list's: `:Compares` forgets a comparison, `:AiCommentsList` deletes a review once you confirm. |
 | `/` | Filter the list as you type (below), in the lists that say so in their heading. |
 | `r` | Refresh. The cursor stays on its item; the filter stays. |
 | `q` | Close (`:q` too). |
 
-Each list adds its own keys, in its heading before these.
+Each list adds its own keys, in its heading before these. `dd` is the key
+quickfix windows remove an entry with too (with
+[qf-tools](https://github.com/roumail/qf-tools)), so it is the same in every
+list at the bottom.
 
 ### Filtering with `/`
 
@@ -50,6 +54,7 @@ call roumail_lists#open('myplugin://things/' . name, {
       \ 'rows': function('s:rows'),         " (items) -> [{'lines': [...], 'item': item}, ...]
       \ 'id': {item -> item.name},          " the same for an item across fetches
       \ 'match': {item -> item.name},       " optional: what / matches on
+      \ 'delete': function('s:delete'),     " optional: (item) removes it, as dd
       \ 'keys': [{'key': '<CR>', 'hint': 'open', 'call': function('s:open')},
       \          {'key': ':Thing'}],        " without 'call', only a hint
       \ }, {'myplugin_dir': dir})           " set as buffer variables before fetch
@@ -61,6 +66,7 @@ call roumail_lists#open('myplugin://things/' . name, {
 | `roumail_lists#item()` | The item under the cursor, `{}` when not on one. |
 | `roumail_lists#row()` | The row under the cursor, `{}` on the heading. A row without `item` is a heading among the rows (a group's, say) and can carry what its keys need. |
 | `roumail_lists#refresh()` | Fetch again, as `r`. |
+| `roumail_lists#delete()` | Remove the item under the cursor and fetch again, as `dd`. |
 | `roumail_lists#set(items)` | List `items` instead, without fetching. |
 | `roumail_lists#draw()` | Draw the items again, after a change to how they show. |
 | `roumail_lists#close()` | Close the list, as `q`. |

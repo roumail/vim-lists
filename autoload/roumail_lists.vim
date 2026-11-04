@@ -18,7 +18,9 @@
 "   keys        [{'key': '<CR>', 'hint': 'open', 'call': Funcref}, ...]: the
 "               list's own keys, in the order the heading shows them; one
 "               without 'call' is only a hint (a command, say)
-" Every list has / (with match), r and q, after its own keys.
+"   delete(item) optional: removes the item, from wherever fetch finds it;
+"               dd, in every list that can, and the list is fetched again
+" Every list has dd (with delete), / (with match), r and q, after its own keys.
 
 
 function! roumail_lists#open(name, spec, vars) abort
@@ -41,6 +43,9 @@ function! roumail_lists#open(name, spec, vars) abort
     endif
     let l:i += 1
   endfor
+  if has_key(a:spec, 'delete')
+    nnoremap <buffer><silent> dd <Cmd>call roumail_lists#delete()<CR>
+  endif
   if has_key(a:spec, 'match')
     nnoremap <buffer><silent> / <Cmd>call roumail_lists#filter()<CR>
   endif
@@ -52,6 +57,15 @@ endfunction
 
 function! roumail_lists#key(i) abort
   call b:roumail_lists.spec.keys[a:i].call()
+endfunction
+
+" dd: the item under the cursor goes, and the list is fetched again
+function! roumail_lists#delete() abort
+  let l:item = roumail_lists#item()
+  if !empty(l:item)
+    call b:roumail_lists.spec.delete(l:item)
+    call roumail_lists#refresh()
+  endif
 endfunction
 
 " Fetches the items again; the filter stays
@@ -84,6 +98,7 @@ function! s:draw() abort
   let l:items = s:matching()
   let l:heading = l:spec.heading(l:list.items)
   let l:hints = map(copy(l:spec.keys), {_, k -> k.key . (has_key(k, 'hint') ? ' ' . k.hint : '')})
+        \ + (has_key(l:spec, 'delete') ? ['dd remove'] : [])
         \ + (has_key(l:spec, 'match') ? ['/ filter'] : []) + ['r refresh', 'q close']
   let l:heading[0] .= (empty(l:list.filter) ? ''
         \   : ', ' . len(l:items) . ' matching ' . string(l:list.filter))

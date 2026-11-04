@@ -23,6 +23,7 @@ function! s:open(...) abort
         \ 'rows': {items -> (l:grouped ? [{'lines': ['fruit'], 'group': 'fruit'}] : [])
         \   + map(copy(items), {_, w -> {'lines': [w], 'item': {'w': w}}})},
         \ 'id': {item -> item.w}, 'match': {item -> item.w},
+        \ 'delete': {item -> filter(g:words, 'v:val !=# item.w')},
         \ 'keys': [{'key': 'x', 'hint': 'pick',
         \   'call': {-> execute('let g:picked = roumail_lists#item().w')}},
         \          {'key': ':Cmd'}]}, {'mine': 1})
@@ -32,7 +33,7 @@ function! s:test_open() abort
   call s:open()
   call assert_equal('test://words', bufname())
   call assert_equal(1, b:mine, 'vars are buffer variables')
-  call assert_equal(['Words (3)  x pick  :Cmd  / filter  r refresh  q close',
+  call assert_equal(['Words (3)  x pick  :Cmd  dd remove  / filter  r refresh  q close',
         \ 'apple', 'banana', 'cherry'], getline(1, '$'))
   call assert_equal(2, line('.'), 'on the first item')
   call assert_equal('nofile', &buftype)
@@ -78,7 +79,7 @@ endfunction
 function! s:test_set_and_draw() abort
   call s:open()
   call roumail_lists#set(['kiwi'])
-  call assert_equal(['Words (1)  x pick  :Cmd  / filter  r refresh  q close', 'kiwi'],
+  call assert_equal(['Words (1)  x pick  :Cmd  dd remove  / filter  r refresh  q close', 'kiwi'],
         \ getline(1, '$'))
   call assert_equal(2, winheight(0))
 endfunction
@@ -86,7 +87,7 @@ endfunction
 function! s:test_filter() abort
   call s:open()
   call feedkeys("/an\<CR>", 'x')
-  call assert_equal(['Words (3), 1 matching ''an''  x pick  :Cmd  / filter  r refresh  q close',
+  call assert_equal(['Words (3), 1 matching ''an''  x pick  :Cmd  dd remove  / filter  r refresh  q close',
         \ 'banana'], getline(1, '$'))
   " r keeps it
   normal r
@@ -100,12 +101,26 @@ function! s:test_filter() abort
   call assert_equal('cherry', getline(2))
 endfunction
 
+function! s:test_delete() abort
+  call s:open()
+  call cursor(3, 1)
+  normal dd
+  call assert_equal(['apple', 'cherry'], g:words)
+  call assert_equal(['apple', 'cherry'], getline(2, '$'))
+  call assert_equal(3, line('.'))
+  " On the heading: nothing goes
+  call cursor(1, 1)
+  normal dd
+  call assert_equal(['apple', 'cherry'], g:words)
+endfunction
+
 function! s:test_no_match_no_filter_key() abort
   call roumail_lists#open('test://plain', {'fetch': {-> [1]},
         \ 'heading': {_ -> ['Plain']}, 'rows': {items -> [{'lines': ['one'], 'item': {}}]},
         \ 'id': {_ -> 1}, 'keys': []}, {})
   call assert_equal('Plain  r refresh  q close', getline(1))
   call assert_equal('', maparg('/', 'n'))
+  call assert_equal('', maparg('dd', 'n'), 'no delete, no dd')
 endfunction
 
 function! s:test_close() abort
