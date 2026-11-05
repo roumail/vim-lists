@@ -1,11 +1,8 @@
 # vim-lists
 
 The lists roumail's Vim plugins show in a window at the bottom, all opened,
-filtered, redrawn and closed the same way:
-[gh-extras](https://github.com/roumail/gh-extras)' `:PRs`, `:MergedPRs`,
-`:Thread` and `:Threads`, [fugitive-extras](https://github.com/roumail/fugitive-extras)'
-`:Compares` and [vim-prompts](https://github.com/roumail/vim-prompts)'
-`:AiCommentsList`. It has no commands of its own; install it for them.
+filtered, redrawn and closed the same way. It has no commands of its own: a
+plugin that needs it says so.
 
 ## In every list
 
